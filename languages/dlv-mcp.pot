@@ -1,0 +1,463 @@
+# Copyright (C) 2025 Roger Kirchhoff
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: DLV-MCP 0.0.7\n"
+"Report-Msgid-Bugs-To: https://github.com/mistermusiker/dlv-mcp/issues\n"
+"POT-Creation-Date: 2025-01-01T00:00:00+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: dlv-mcp.php
+msgid "MCP Server is disabled."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "API key required. Use Authorization: Bearer YOUR_API_KEY"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Invalid API key."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Permission denied."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Log file not available."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Settings saved."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "No settings to save."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Security check failed."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Invalid file path."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Log file not readable."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copied!"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy failed."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Refreshing..."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Could not load log file."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Refresh failed."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Size:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Lines:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "DLV MCP Debug Log Viewer"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "DLV MCP Server Settings"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "API key generated successfully. Copy it now - it will not be shown again!"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "API key deleted."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "MCP Server enabled."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "MCP Server disabled."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "API key not found."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "New API Key Generated"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy this key now - it will not be shown again!"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy API Key"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Quick Integration"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Cursor IDE"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "One-click installation in Cursor IDE:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Add to Cursor IDE"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy Link"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Click the button to open Cursor IDE and install the MCP server automatically."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Claude Code"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Run this command in your terminal:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy Command"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Manual Configuration"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Create a"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "file in your project:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy Configuration"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "MCP Server Status"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Status"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Enabled"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Disabled"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Disable"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Enable"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "MCP Endpoint"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "API Keys Management"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "API keys are required to authenticate with the MCP Server. Generate a key to use with Claude Code or Cursor IDE."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Key Name:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "e.g., Claude Code Local"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Generate New API Key"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Name"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Created"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Last Used"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Actions"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Never"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Are you sure you want to delete this API key?"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Delete"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "No API keys yet. Generate one to get started."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Integration Guides"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Generate an API key above to see integration instructions with your key pre-filled."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "After generating an API key, you'll see a one-click installation button here."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "After generating an API key, you'll see a ready-to-use command here."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "After generating an API key, you'll see the configuration JSON here."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Available MCP Tools"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Once connected, these tools are available:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Get the last N lines of the debug log"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Search for patterns in the log"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Get errors from the last N minutes"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Get log file information (size, lines)"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Get the most recent log entries"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Clear the debug log"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Example Usage"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "After setup, you can ask:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Logging has been enabled."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Logging has been disabled."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Log file has been cleared."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Could not enable logging. Please check file permissions."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Could not clear the log file."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Log file does not exist or is not writable."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "MCP Server Settings"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Logging:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Log file:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "No log file defined yet."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "View in browser"
+msgstr ""
+
+#. translators: %d: number of log files
+#: dlv-mcp.php
+msgid "All log files (%d)"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "File"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Modified"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Current log file"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "View"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "File size:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Disable logging"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Enable logging"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Refresh"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Download log"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Clear log"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Current log contents (tail)"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Wrap lines"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Highlight"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Hide Deprecated"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Filter:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Search..."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Auto-refresh"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Interval:"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "seconds"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "Copy to clipboard"
+msgstr ""
+
+#: dlv-mcp.php
+msgid "No log file is currently configured. Enable logging to create a new log file."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "The configured log file does not exist yet. It will be created when the first error is logged."
+msgstr ""
+
+#: dlv-mcp.php
+msgid "The log file exists but is not readable. Please check file permissions."
+msgstr ""
