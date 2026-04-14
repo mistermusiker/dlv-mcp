@@ -11,7 +11,7 @@
  * Plugin Name:       DLV-MCP
  * Plugin URI:        https://github.com/mistermusiker/dlv-mcp
  * Description:       Debug Log Viewer with MCP Server for Claude Code and Cursor integration. View, filter, and manage WordPress debug logs with a modern admin interface. Includes REST API for AI-assisted debugging.
- * Version:           0.0.7
+ * Version:           0.0.8
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Roger Kirchhoff
@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const OPTION_KEY = 'dlv_mcp_settings';
 const API_KEYS_OPTION = 'dlv_mcp_api_keys';
 const MAX_LOG_SIZE = 1048576; // 1 MB
-const MAX_ROTATED_FILES = 3;
+const MAX_ROTATED_FILES = 10;
 const MCP_PROTOCOL_VERSION = '2025-11-25';
 
 /**
@@ -354,46 +354,59 @@ function filter_log_content( string $content ): string {
  *
  * @return string
  */
-function tail_file( string $file, ?int $max_bytes = null ): string {
+function tail_file( string $file, ?int $max_bytes = null, array $all_files = array() ): string {
 	if ( null === $max_bytes ) {
 		$settings  = get_settings();
 		$max_bytes = ! empty( $settings['max_log_size'] ) ? (int) $settings['max_log_size'] : MAX_LOG_SIZE;
 	}
 
-	if ( ! is_readable( $file ) ) {
-		return '';
+	if ( empty( $all_files ) ) {
+		$all_files = array( $file );
 	}
 
-	$size = filesize( $file );
+	$remaining = $max_bytes;
+	$chunks    = array();
 
-	if ( false === $size || $size <= $max_bytes ) {
-		$content = file_get_contents( $file );
-		$content = is_string( $content ) ? $content : '';
-		// Don't filter here - JavaScript handles filtering for display
-		return $content;
+	// Walk files from newest to oldest, collect bytes until we have enough.
+	for ( $i = count( $all_files ) - 1; $i >= 0 && $remaining > 0; $i-- ) {
+		$f = $all_files[ $i ];
+		if ( ! is_readable( $f ) ) {
+			continue;
+		}
+		$size = filesize( $f );
+		if ( false === $size || 0 === $size ) {
+			continue;
+		}
+
+		if ( $size <= $remaining ) {
+			// Take the whole file.
+			$content = file_get_contents( $f );
+			if ( is_string( $content ) && $content !== '' ) {
+				array_unshift( $chunks, $content );
+				$remaining -= $size;
+			}
+		} else {
+			// Take the tail of this file.
+			$fp = fopen( $f, 'rb' );
+			if ( ! $fp ) {
+				continue;
+			}
+			fseek( $fp, -1 * $remaining, SEEK_END );
+			$data = fread( $fp, $remaining );
+			fclose( $fp );
+			if ( is_string( $data ) && $data !== '' ) {
+				// Ensure we start at a line boundary.
+				$pos = strpos( $data, "\n" );
+				if ( false !== $pos ) {
+					$data = substr( $data, $pos + 1 );
+				}
+				array_unshift( $chunks, $data );
+			}
+			$remaining = 0;
+		}
 	}
 
-	$fp = fopen( $file, 'rb' );
-	if ( ! $fp ) {
-		return '';
-	}
-
-	fseek( $fp, -1 * $max_bytes, SEEK_END );
-	$data = fread( $fp, $max_bytes );
-	fclose( $fp );
-
-	if ( ! is_string( $data ) ) {
-		return '';
-	}
-
-	// Ensure we start at a line boundary.
-	$pos = strpos( $data, "\n" );
-	if ( false !== $pos ) {
-		$data = substr( $data, $pos + 1 );
-	}
-
-	// Don't filter here - JavaScript handles filtering for display
-	return $data;
+	return implode( '', $chunks );
 }
 
 /**
@@ -403,25 +416,36 @@ function tail_file( string $file, ?int $max_bytes = null ): string {
  * @param int $lines
  * @return string
  */
-function tail_lines( string $file, int $lines = 100 ): string {
-	if ( ! is_readable( $file ) ) {
-		return '';
-	}
-	
-	$content = file_get_contents( $file );
-	if ( ! is_string( $content ) ) {
-		return '';
+function tail_lines( string $file, int $lines = 100, array $all_files = array() ): string {
+	if ( empty( $all_files ) ) {
+		$all_files = array( $file );
 	}
 
-	// Don't filter here - return raw content for MCP tools
-	$all_lines = explode( "\n", $content );
-	$total = count( $all_lines );
-	
-	if ( $total <= $lines ) {
-		return $content;
+	$collected = array();
+
+	// Walk files from newest to oldest, collect lines until we have enough.
+	for ( $i = count( $all_files ) - 1; $i >= 0; $i-- ) {
+		$f = $all_files[ $i ];
+		if ( ! is_readable( $f ) ) {
+			continue;
+		}
+		$content = file_get_contents( $f );
+		if ( ! is_string( $content ) || $content === '' ) {
+			continue;
+		}
+		$file_lines = explode( "\n", $content );
+		// Prepend these lines before what we already collected.
+		$collected = array_merge( $file_lines, $collected );
+		if ( count( $collected ) >= $lines ) {
+			break;
+		}
 	}
-	
-	return implode( "\n", array_slice( $all_lines, -$lines ) );
+
+	if ( count( $collected ) <= $lines ) {
+		return implode( "\n", $collected );
+	}
+
+	return implode( "\n", array_slice( $collected, -$lines ) );
 }
 
 /**
@@ -432,33 +456,41 @@ function tail_lines( string $file, int $lines = 100 ): string {
  * @param int $max_results
  * @return array
  */
-function search_log( string $file, string $pattern, int $max_results = 100 ): array {
-	if ( ! is_readable( $file ) ) {
-		return array();
+function search_log( string $file, string $pattern, int $max_results = 100, array $all_files = array() ): array {
+	if ( empty( $all_files ) ) {
+		$all_files = array( $file );
 	}
-	
-	$content = file_get_contents( $file );
-	if ( ! is_string( $content ) ) {
-		return array();
-	}
-	
-	$lines = explode( "\n", $content );
+
 	$results = array();
-	$pattern_lower = strtolower( $pattern );
-	
-	foreach ( $lines as $line_num => $line ) {
-		if ( stripos( $line, $pattern ) !== false ) {
-			$results[] = array(
-				'line_number' => $line_num + 1,
-				'content'     => $line,
-			);
-			
-			if ( count( $results ) >= $max_results ) {
-				break;
+
+	// Walk files from oldest to newest (chronological order).
+	foreach ( $all_files as $f ) {
+		if ( ! is_readable( $f ) ) {
+			continue;
+		}
+		$content = file_get_contents( $f );
+		if ( ! is_string( $content ) || $content === '' ) {
+			continue;
+		}
+
+		$lines    = explode( "\n", $content );
+		$filename = basename( $f );
+
+		foreach ( $lines as $line_num => $line ) {
+			if ( stripos( $line, $pattern ) !== false ) {
+				$results[] = array(
+					'line_number' => $line_num + 1,
+					'content'     => $line,
+					'file'        => $filename,
+				);
+
+				if ( count( $results ) >= $max_results ) {
+					return $results;
+				}
 			}
 		}
 	}
-	
+
 	return $results;
 }
 
@@ -469,38 +501,49 @@ function search_log( string $file, string $pattern, int $max_results = 100 ): ar
  * @param int $since Unix timestamp
  * @return array
  */
-function get_errors_since( string $file, int $since ): array {
-	if ( ! is_readable( $file ) ) {
-		return array();
+function get_errors_since( string $file, int $since, array $all_files = array() ): array {
+	if ( empty( $all_files ) ) {
+		$all_files = array( $file );
 	}
-	
-	$content = file_get_contents( $file );
-	if ( ! is_string( $content ) ) {
-		return array();
-	}
-	
-	$lines = explode( "\n", $content );
-	$results = array();
-	
-	// PHP error log format: [DD-Mon-YYYY HH:MM:SS TZ] ...
+
+	$results      = array();
 	$date_pattern = '/^\[(\d{2}-\w{3}-\d{4}\s+\d{2}:\d{2}:\d{2})\s+\w+\]/';
-	
-	foreach ( $lines as $line ) {
-		if ( preg_match( $date_pattern, $line, $matches ) ) {
-			$timestamp = strtotime( $matches[1] );
-			if ( $timestamp && $timestamp >= $since ) {
-				// Check if it's an error type
-				if ( preg_match( '/(Fatal error|Parse error|Warning|Notice|Deprecated|Error)/i', $line ) ) {
-					$results[] = array(
-						'timestamp' => $timestamp,
-						'datetime'  => $matches[1],
-						'content'   => $line,
-					);
+
+	// Walk files from oldest to newest (chronological order).
+	foreach ( $all_files as $f ) {
+		if ( ! is_readable( $f ) ) {
+			continue;
+		}
+
+		// Skip files last modified before the requested timestamp.
+		$mtime = filemtime( $f );
+		if ( false !== $mtime && $mtime < $since ) {
+			continue;
+		}
+
+		$content = file_get_contents( $f );
+		if ( ! is_string( $content ) || $content === '' ) {
+			continue;
+		}
+
+		$lines = explode( "\n", $content );
+
+		foreach ( $lines as $line ) {
+			if ( preg_match( $date_pattern, $line, $matches ) ) {
+				$timestamp = strtotime( $matches[1] );
+				if ( $timestamp && $timestamp >= $since ) {
+					if ( preg_match( '/(Fatal error|Parse error|Warning|Notice|Deprecated|Error)/i', $line ) ) {
+						$results[] = array(
+							'timestamp' => $timestamp,
+							'datetime'  => $matches[1],
+							'content'   => $line,
+						);
+					}
 				}
 			}
 		}
 	}
-	
+
 	return $results;
 }
 
@@ -510,21 +553,24 @@ function get_errors_since( string $file, int $since ): array {
  * @param string $file
  * @return array
  */
-function get_log_info( string $file ): array {
+function get_log_info( string $file, array $all_files = array() ): array {
 	if ( ! file_exists( $file ) ) {
 		return array(
-			'exists'     => false,
-			'size'       => 0,
-			'size_human' => '0 B',
-			'lines'      => 0,
-			'modified'   => null,
+			'exists'      => false,
+			'size'        => 0,
+			'size_human'  => '0 B',
+			'lines'       => 0,
+			'modified'    => null,
+			'total_files' => 0,
+			'total_size'  => 0,
+			'total_lines' => 0,
 		);
 	}
 
 	clearstatcache( true, $file );
 	$size = filesize( $file );
 
-	// Count lines
+	// Count lines for current file.
 	$lines = 0;
 	if ( is_readable( $file ) && $size > 0 ) {
 		$fp = fopen( $file, 'r' );
@@ -539,12 +585,49 @@ function get_log_info( string $file ): array {
 		}
 	}
 
+	// Calculate totals across all log files.
+	$total_size  = $size;
+	$total_lines = $lines;
+	$file_count  = 1;
+
+	if ( ! empty( $all_files ) ) {
+		$total_size  = 0;
+		$total_lines = 0;
+		$file_count  = count( $all_files );
+
+		foreach ( $all_files as $f ) {
+			if ( ! file_exists( $f ) ) {
+				continue;
+			}
+			clearstatcache( true, $f );
+			$fsize = filesize( $f );
+			if ( false !== $fsize ) {
+				$total_size += $fsize;
+			}
+			if ( is_readable( $f ) && $fsize > 0 ) {
+				$fp = fopen( $f, 'r' );
+				if ( $fp ) {
+					while ( ! feof( $fp ) ) {
+						$buffer = fread( $fp, 8192 );
+						if ( $buffer ) {
+							$total_lines += substr_count( $buffer, "\n" );
+						}
+					}
+					fclose( $fp );
+				}
+			}
+		}
+	}
+
 	return array(
-		'exists'     => true,
-		'size'       => $size,
-		'size_human' => size_format( $size, 2 ),
-		'lines'      => $lines,
-		'modified'   => filemtime( $file ),
+		'exists'      => true,
+		'size'        => $size,
+		'size_human'  => size_format( $size, 2 ),
+		'lines'       => $lines,
+		'modified'    => filemtime( $file ),
+		'total_files' => $file_count,
+		'total_size'  => $total_size,
+		'total_lines' => $total_lines,
 	);
 }
 
@@ -603,6 +686,29 @@ function get_all_log_files(): array {
 	);
 
 	return $result;
+}
+
+/**
+ * Get all log file paths sorted chronologically (oldest first).
+ *
+ * Returns paths in order: .log.3, .log.2, .log.1, .log (current).
+ * This allows simple concatenation for a chronological log stream.
+ *
+ * @return array<string> File paths, oldest first.
+ */
+function get_sorted_log_files(): array {
+	$all = get_all_log_files(); // sorted newest first
+	if ( empty( $all ) ) {
+		return array();
+	}
+
+	// Reverse to get oldest first, extract paths only.
+	return array_map(
+		function ( $f ) {
+			return $f['path'];
+		},
+		array_reverse( $all )
+	);
 }
 
 /**
@@ -848,7 +954,7 @@ function mcp_handle_tools_list( array $params, $id ): \WP_REST_Response {
 	$tools = array(
 		array(
 			'name'        => 'get_debug_log',
-			'description' => 'Get the last N lines of the WordPress debug log',
+			'description' => 'Get the last N lines of the WordPress debug log (searches across all rotated log files)',
 			'inputSchema' => array(
 				'type'       => 'object',
 				'properties' => array(
@@ -862,7 +968,7 @@ function mcp_handle_tools_list( array $params, $id ): \WP_REST_Response {
 		),
 		array(
 			'name'        => 'search_debug_log',
-			'description' => 'Search the debug log for a specific pattern or text',
+			'description' => 'Search the debug log for a specific pattern or text (searches across all rotated log files)',
 			'inputSchema' => array(
 				'type'       => 'object',
 				'properties' => array(
@@ -881,7 +987,7 @@ function mcp_handle_tools_list( array $params, $id ): \WP_REST_Response {
 		),
 		array(
 			'name'        => 'get_errors_since',
-			'description' => 'Get all errors from the debug log since a specific time',
+			'description' => 'Get all errors from the debug log since a specific time (searches across all rotated log files)',
 			'inputSchema' => array(
 				'type'       => 'object',
 				'properties' => array(
@@ -899,7 +1005,7 @@ function mcp_handle_tools_list( array $params, $id ): \WP_REST_Response {
 		),
 		array(
 			'name'        => 'get_log_info',
-			'description' => 'Get information about the current debug log file (size, lines, last modified)',
+			'description' => 'Get information about the debug log files (size, lines, last modified — includes totals across all rotated files)',
 			'inputSchema' => array(
 				'type' => 'object',
 			),
@@ -920,7 +1026,7 @@ function mcp_handle_tools_list( array $params, $id ): \WP_REST_Response {
 		),
 		array(
 			'name'        => 'tail_debug_log',
-			'description' => 'Get the most recent entries from the debug log (real-time view)',
+			'description' => 'Get the most recent entries from the debug log by byte count (searches across all rotated log files)',
 			'inputSchema' => array(
 				'type'       => 'object',
 				'properties' => array(
@@ -948,9 +1054,10 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 	$tool_name = $params['name'] ?? '';
 	$arguments = $params['arguments'] ?? array();
 	
-	$settings = get_settings();
-	$log_file = $settings['log_file'] ?? '';
-	
+	$settings  = get_settings();
+	$log_file  = $settings['log_file'] ?? '';
+	$all_files = get_sorted_log_files();
+
 	if ( empty( $log_file ) || ! file_exists( $log_file ) ) {
 		return mcp_tool_response(
 			array(
@@ -963,16 +1070,16 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 			$id
 		);
 	}
-	
+
 	switch ( $tool_name ) {
 		case 'get_debug_log':
 			$lines = min( absint( $arguments['lines'] ?? 100 ), 1000 );
-			$content = tail_lines( $log_file, $lines );
-			
+			$content = tail_lines( $log_file, $lines, $all_files );
+
 			if ( empty( $content ) ) {
 				$content = '(Log file is empty)';
 			}
-			
+
 			return mcp_tool_response(
 				array(
 					array(
@@ -983,11 +1090,11 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 				false,
 				$id
 			);
-		
+
 		case 'search_debug_log':
 			$pattern = $arguments['pattern'] ?? '';
 			$max_results = min( absint( $arguments['max_results'] ?? 100 ), 500 );
-			
+
 			if ( empty( $pattern ) ) {
 				return mcp_tool_response(
 					array(
@@ -1000,18 +1107,18 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 					$id
 				);
 			}
-			
-			$results = search_log( $log_file, $pattern, $max_results );
-			
+
+			$results = search_log( $log_file, $pattern, $max_results, $all_files );
+
 			if ( empty( $results ) ) {
 				$text = "No results found for pattern: {$pattern}";
 			} else {
 				$text = "Found " . count( $results ) . " matches for '{$pattern}':\n\n";
 				foreach ( $results as $result ) {
-					$text .= "Line {$result['line_number']}: {$result['content']}\n";
+					$text .= "[{$result['file']}] Line {$result['line_number']}: {$result['content']}\n";
 				}
 			}
-			
+
 			return mcp_tool_response(
 				array(
 					array(
@@ -1022,17 +1129,17 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 				false,
 				$id
 			);
-		
+
 		case 'get_errors_since':
 			$timestamp = $arguments['timestamp'] ?? null;
-			
+
 			if ( ! $timestamp ) {
 				$minutes = absint( $arguments['minutes_ago'] ?? 60 );
 				$timestamp = time() - ( $minutes * 60 );
 			}
-			
-			$errors = get_errors_since( $log_file, $timestamp );
-			
+
+			$errors = get_errors_since( $log_file, $timestamp, $all_files );
+
 			if ( empty( $errors ) ) {
 				$text = "No errors found since " . gmdate( 'Y-m-d H:i:s', $timestamp ) . " UTC";
 			} else {
@@ -1041,7 +1148,7 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 					$text .= "[{$error['datetime']}] {$error['content']}\n\n";
 				}
 			}
-			
+
 			return mcp_tool_response(
 				array(
 					array(
@@ -1052,16 +1159,22 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 				false,
 				$id
 			);
-		
+
 		case 'get_log_info':
-			$info = get_log_info( $log_file );
-			
+			$info = get_log_info( $log_file, $all_files );
+
 			$text = "Debug Log Information:\n";
-			$text .= "- File: " . basename( $log_file ) . "\n";
-			$text .= "- Size: {$info['size_human']} ({$info['size']} bytes)\n";
-			$text .= "- Lines: {$info['lines']}\n";
-			$text .= "- Last Modified: " . ( $info['modified'] ? gmdate( 'Y-m-d H:i:s', $info['modified'] ) . ' UTC' : 'N/A' );
-			
+			$text .= "- Current File: " . basename( $log_file ) . "\n";
+			$text .= "- Current Size: {$info['size_human']} ({$info['size']} bytes)\n";
+			$text .= "- Current Lines: {$info['lines']}\n";
+			$text .= "- Last Modified: " . ( $info['modified'] ? gmdate( 'Y-m-d H:i:s', $info['modified'] ) . ' UTC' : 'N/A' ) . "\n";
+
+			if ( $info['total_files'] > 1 ) {
+				$text .= "\nAll Log Files ({$info['total_files']}):\n";
+				$text .= "- Total Size: " . size_format( $info['total_size'], 2 ) . " ({$info['total_size']} bytes)\n";
+				$text .= "- Total Lines: {$info['total_lines']}";
+			}
+
 			return mcp_tool_response(
 				array(
 					array(
@@ -1072,10 +1185,10 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 				false,
 				$id
 			);
-		
+
 		case 'clear_debug_log':
 			$confirm = $arguments['confirm'] ?? false;
-			
+
 			if ( ! $confirm ) {
 				return mcp_tool_response(
 					array(
@@ -1088,9 +1201,9 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 					$id
 				);
 			}
-			
+
 			$success = clear_log_file( $log_file );
-			
+
 			return mcp_tool_response(
 				array(
 					array(
@@ -1101,15 +1214,15 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 				! $success,
 				$id
 			);
-		
+
 		case 'tail_debug_log':
 			$bytes = min( absint( $arguments['bytes'] ?? 10000 ), 100000 );
-			$content = tail_file( $log_file, $bytes );
-			
+			$content = tail_file( $log_file, $bytes, $all_files );
+
 			if ( empty( $content ) ) {
 				$content = '(Log file is empty)';
 			}
-			
+
 			return mcp_tool_response(
 				array(
 					array(
@@ -1120,7 +1233,7 @@ function mcp_handle_tools_call( array $params, $id ): \WP_REST_Response {
 				false,
 				$id
 			);
-		
+
 		default:
 			return mcp_error_response( -32601, 'Unknown tool: ' . $tool_name, $id );
 	}

@@ -1,0 +1,40 @@
+DLV-MCP - Debug Log Viewer and MCP Server
+==========================================
+
+Changelog / History
+-------------------
+
+v0.0.8
+------
+- MCP tools now transparently read across all rotated log files
+  (previously only the current file). Log entries are no longer lost
+  after log rotation.
+- New internal function get_sorted_log_files() returns all log files
+  sorted chronologically (oldest first).
+- tail_lines() collects the last N lines across all log files.
+- tail_file() collects the last N bytes across all log files.
+- search_log() searches all log files chronologically and includes the
+  filename in each result.
+- get_errors_since() checks all log files, skips older files via
+  filemtime optimization.
+- get_log_info() shows aggregate statistics (file count, total size,
+  total lines) in addition to the current file info.
+- MCP tool descriptions updated to indicate cross-file search capability.
+- The MCP API remains fully backwards compatible (no new parameters
+  or tools). The admin UI is not affected.
+
+v0.0.7
+------
+- Initial release.
+- WordPress Debug Log Viewer with admin UI.
+- MCP Server with 6 tools: get_debug_log, search_debug_log, get_errors_since,
+  get_log_info, tail_debug_log, clear_debug_log.
+- API key management with Bearer token authentication.
+- Automatic log rotation at configurable max size (default 1 MB).
+- Up to 10 rotated backup files (.log.1, .log.2, .log.3).
+- Security features: .htaccess protection, path traversal prevention,
+  API key hashing.
+- Admin UI with line wrap, highlighting, auto-refresh, filter and
+  deprecated message hiding.
+- MCP Server settings page with API key generator.
+- Supports JSON-RPC 2.0 protocol (MCP Protocol Version 2025-11-25).
