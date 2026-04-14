@@ -289,12 +289,12 @@ Cursor will automatically use the appropriate DLV MCP tool to fetch and analyze 
 
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `get_debug_log` | Get last N lines from the log | `lines` (default: 100, max: 1000) |
-| `search_debug_log` | Search the log for a pattern | `pattern` (required), `max_results` (default: 100) |
-| `get_errors_since` | Get errors from the last N minutes | `minutes_ago` (default: 60), `timestamp` |
-| `get_log_info` | Get log file information | - |
-| `tail_debug_log` | Get most recent log entries | `bytes` (default: 10000) |
-| `clear_debug_log` | Clear the debug log | `confirm` (must be true) |
+| `get_debug_log` | Get last N lines (across all rotated log files) | `lines` (default: 100, max: 1000) |
+| `search_debug_log` | Search for a pattern (across all rotated log files) | `pattern` (required), `max_results` (default: 100) |
+| `get_errors_since` | Get errors from the last N minutes (across all rotated log files) | `minutes_ago` (default: 60), `timestamp` |
+| `get_log_info` | Get log file information (includes totals across all files) | - |
+| `tail_debug_log` | Get most recent log entries (across all rotated log files) | `bytes` (default: 10000) |
+| `clear_debug_log` | Clear the current debug log | `confirm` (must be true) |
 
 ### Direct API Access (curl)
 
@@ -378,6 +378,13 @@ Yes! You can generate multiple API keys for different team members or applicatio
 The MCP Server follows the Model Context Protocol specification (version 2025-11-25) and should work with any MCP-compatible client.
 
 ## Changelog
+
+### 0.0.8
+- MCP tools now transparently read across all rotated log files
+- Log entries are no longer lost after log rotation
+- search_debug_log includes the source filename in results
+- get_log_info shows aggregate statistics across all log files
+- API remains fully backwards compatible
 
 ### 0.0.7
 - Initial release
