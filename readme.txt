@@ -4,7 +4,7 @@ Author: Roger Kirchhoff
 Tags: debug, log, mcp, ai, debugging, claude, cursor, developer, error-log
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 0.0.7
+Stable tag: 0.0.8
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -108,6 +108,13 @@ No. DLV-MCP manages its own log file. However, if you want WordPress to also use
 
 == Changelog ==
 
+= 0.0.8 =
+* MCP tools now transparently read across all rotated log files
+* Log entries are no longer lost after log rotation
+* search_debug_log includes the source filename in results
+* get_log_info shows aggregate statistics across all log files
+* API remains fully backwards compatible
+
 = 0.0.7 =
 * Fixed settings persistence for toggle options
 * Improved Hide Deprecated toggle functionality
@@ -142,6 +149,9 @@ No. DLV-MCP manages its own log file. However, if you want WordPress to also use
 * Basic debug log viewer
 
 == Upgrade Notice ==
+
+= 0.0.8 =
+MCP tools now search across all rotated log files. No more lost entries after log rotation.
 
 = 0.0.7 =
 This version includes important fixes for settings persistence. Upgrade recommended.
