@@ -11,7 +11,7 @@
  * Plugin Name:       DLV-MCP
  * Plugin URI:        https://github.com/mistermusiker/dlv-mcp
  * Description:       Debug Log Viewer with MCP Server for Claude Code and Cursor integration. View, filter, and manage WordPress debug logs with a modern admin interface. Includes REST API for AI-assisted debugging.
- * Version:           0.0.8
+ * Version:           0.0.10
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Roger Kirchhoff
@@ -29,6 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+const VERSION = '0.0.10'; // Keep in sync with the Version header above.
 const OPTION_KEY = 'dlv_mcp_settings';
 const API_KEYS_OPTION = 'dlv_mcp_api_keys';
 const MAX_LOG_SIZE = 1048576; // 1 MB
@@ -646,21 +647,51 @@ function clear_log_file( string $file ): bool {
 }
 
 /**
+ * Get the directory the log files actually live in.
+ *
+ * The configured log file decides, not this site's upload directory. Both can
+ * differ: the path in the settings is absolute and stored in the database, so a
+ * site cloned including its database (WPvivid Staging and friends) inherits the
+ * original's path and keeps writing into the original's file. Listing the local
+ * directory in that situation returns the stale copies that came with the clone
+ * instead of the log that is being written right now.
+ *
+ * Only generate_log_file_path() stays with the local upload directory - it
+ * creates a fresh file for this site on purpose.
+ *
+ * @return string Directory without trailing slash, or '' if none can be determined.
+ */
+function get_log_dir(): string {
+	$settings = get_settings();
+
+	if ( ! empty( $settings['log_file'] ) ) {
+		return untrailingslashit( dirname( $settings['log_file'] ) );
+	}
+
+	$uploads = wp_get_upload_dir();
+
+	if ( empty( $uploads['basedir'] ) ) {
+		return '';
+	}
+
+	return untrailingslashit( trailingslashit( $uploads['basedir'] ) . 'dlv-mcp-logs' );
+}
+
+/**
  * Get all log files in the logs directory.
  *
  * @return array
  */
 function get_all_log_files(): array {
-	$uploads = wp_get_upload_dir();
-	$log_dir = trailingslashit( $uploads['basedir'] ) . 'dlv-mcp-logs';
+	$log_dir = get_log_dir();
 
-	if ( ! is_dir( $log_dir ) ) {
+	if ( '' === $log_dir || ! is_dir( $log_dir ) ) {
 		return array();
 	}
 
 	$settings    = get_settings();
 	$current_log = ! empty( $settings['log_file'] ) ? $settings['log_file'] : '';
-	$files       = glob( $log_dir . '/*.log*' );
+	$files       = glob( trailingslashit( $log_dir ) . '*.log*' );
 	$result      = array();
 
 	if ( ! $files ) {
@@ -936,7 +967,7 @@ function mcp_handle_initialize( array $params, $id ): \WP_REST_Response {
 		),
 		'serverInfo'      => array(
 			'name'    => 'DLV MCP Debug Log Server',
-			'version' => '3.0.0',
+			'version' => VERSION,
 		),
 	);
 	
@@ -1005,7 +1036,7 @@ function mcp_handle_tools_list( array $params, $id ): \WP_REST_Response {
 		),
 		array(
 			'name'        => 'get_log_info',
-			'description' => 'Get information about the debug log files (size, lines, last modified — includes totals across all rotated files)',
+			'description' => 'Get information about the debug log files (size, lines, last modified - includes totals across all rotated files)',
 			'inputSchema' => array(
 				'type' => 'object',
 			),
@@ -1472,9 +1503,14 @@ function handle_admin_action(): void {
 				break;
 			}
 
-			$uploads  = wp_get_upload_dir();
-			$log_dir  = trailingslashit( $uploads['basedir'] ) . 'dlv-mcp-logs';
-			$log_path = $log_dir . '/' . $log_name;
+			$log_dir = get_log_dir();
+
+			if ( '' === $log_dir ) {
+				$redirect = add_query_arg( 'dlv_mcp_error', 'delete_not_found', $redirect );
+				break;
+			}
+
+			$log_path = trailingslashit( $log_dir ) . $log_name;
 
 			// Prevent deletion of current log file
 			$settings    = get_settings();
@@ -1596,8 +1632,12 @@ function ajax_view_log(): void {
 		wp_die( esc_html__( 'Permission denied.', 'dlv-mcp' ) );
 	}
 
-	$uploads  = wp_get_upload_dir();
-	$log_dir  = trailingslashit( $uploads['basedir'] ) . 'dlv-mcp-logs';
+	$log_dir = get_log_dir();
+
+	if ( '' === $log_dir ) {
+		wp_die( esc_html__( 'Invalid file path.', 'dlv-mcp' ) );
+	}
+
 	$log_file = trailingslashit( $log_dir ) . $filename;
 
 	// Security: ensure file is within log directory
@@ -1634,14 +1674,14 @@ function enqueue_assets( string $hook ): void {
 		'dlv-mcp-admin',
 		plugins_url( 'assets/admin.css', __FILE__ ),
 		array(),
-		'3.0.0'
+		VERSION
 	);
 
 	wp_enqueue_script(
 		'dlv-mcp-admin',
 		plugins_url( 'assets/admin.js', __FILE__ ),
 		array(),
-		'3.0.0',
+		VERSION,
 		true
 	);
 

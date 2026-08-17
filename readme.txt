@@ -3,8 +3,8 @@ Contributors: mistermusiker
 Author: Roger Kirchhoff
 Tags: debug, log, mcp, ai, debugging, claude, cursor, developer, error-log
 Requires at least: 5.8
-Tested up to: 6.7
-Stable tag: 0.0.8
+Tested up to: 7.0
+Stable tag: 0.0.10
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -108,6 +108,18 @@ No. DLV-MCP manages its own log file. However, if you want WordPress to also use
 
 == Changelog ==
 
+= 0.0.10 =
+* Log file listing now follows the configured log file's directory
+* Fixes clones (staging copies) showing stale log files from the clone instead
+  of the log that is actually being written
+* Affects the file list, the log viewer and log deletion; creating a new log
+  file still uses this site's own upload directory
+* The plugin version now lives in a single constant: the MCP server reports the
+  real version instead of a hardcoded one
+* Admin CSS and JS are versioned per release, so style and script updates are no
+  longer served from the browser cache after an update
+* Version 0.0.9 was skipped
+
 = 0.0.8 =
 * MCP tools now transparently read across all rotated log files
 * Log entries are no longer lost after log rotation
@@ -149,6 +161,9 @@ No. DLV-MCP manages its own log file. However, if you want WordPress to also use
 * Basic debug log viewer
 
 == Upgrade Notice ==
+
+= 0.0.10 =
+Fixes stale log files being shown on cloned/staging sites. Recommended if you run a staging copy.
 
 = 0.0.8 =
 MCP tools now search across all rotated log files. No more lost entries after log rotation.

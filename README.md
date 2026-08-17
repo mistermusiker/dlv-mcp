@@ -1,10 +1,10 @@
-# DLV MCP - Wordpress Debug Log Viewer and MCP Server
+# DLV-MCP - WordPress Debug Log Viewer and MCP Server
 
 ## Let your vibe coding AI talk to your debug log.
 
-A WordPress plugin that provides a modern debug log viewer with an integrated MCP (Model Context Protocol) Server for AI-assisted Wordpress debugging with Claude Code and Cursor.
+A WordPress plugin that provides a modern debug log viewer with an integrated MCP (Model Context Protocol) Server for AI-assisted WordPress debugging with Claude Code and Cursor.
 
-DLV-MCP lets you ask Cursor and Claude Code connect to your wordpress log, read it, aks questions about it and find errors. 
+DLV-MCP lets Cursor and Claude Code connect to your WordPress log, read it, answer questions about it and find errors.
 
 ## Description
 
@@ -23,17 +23,19 @@ DLV-MCP makes WordPress debugging easier by providing:
 
 ## Installation
 
-### Manual Installation
+DLV-MCP is not in the wordpress.org plugin directory, so install it from a release ZIP or by copying the files.
 
-1. Download the plugin files
+### From WordPress Admin (ZIP)
+
+1. Download the ZIP of the latest [release](https://github.com/mistermusiker/dlv-mcp/releases)
+2. In WordPress, go to **Plugins > Add New > Upload Plugin**
+3. Choose the ZIP, click **Install Now**, then **Activate**
+
+### Manual Installation (FTP/SFTP)
+
+1. Download and unpack the release ZIP
 2. Upload the `dlv-mcp` folder to `/wp-content/plugins/`
 3. Activate the plugin through the 'Plugins' menu in WordPress
-
-### From WordPress Admin
-
-1. Go to Plugins > Add New
-2. Search for "DLV-MCP"
-3. Click "Install Now" and then "Activate"
 
 ## Configuration
 
@@ -379,15 +381,53 @@ The MCP Server follows the Model Context Protocol specification (version 2025-11
 
 ## Changelog
 
+### 0.0.10
+- Log file listing now follows the configured log file's directory
+- Fixes clones (staging copies) showing stale log files from the clone instead of the log that is actually being written
+- Affects the file list, the log viewer and log deletion; creating a new log file still uses this site's own upload directory
+- The plugin version now lives in a single constant, so the MCP server reports the real version
+- Admin CSS and JS are versioned per release and are no longer served from the browser cache after an update
+- Version 0.0.9 was skipped
+
 ### 0.0.8
 - MCP tools now transparently read across all rotated log files
 - Log entries are no longer lost after log rotation
-- search_debug_log includes the source filename in results
-- get_log_info shows aggregate statistics across all log files
+- `search_debug_log` includes the source filename in results
+- `get_log_info` shows aggregate statistics across all log files
 - API remains fully backwards compatible
 
 ### 0.0.7
+- Fixed settings persistence for toggle options
+- Improved Hide Deprecated toggle functionality
+- Updated to MCP Protocol version 2025-11-25
+
+### 0.0.6
+- Added Quick Integration panel for easy setup
+- Added one-click Cursor IDE installation
+- Improved API key generation workflow
+
+### 0.0.5
+- Added syntax highlighting for log entries
+- Added Hide Deprecated toggle
+- Improved search functionality
+
+### 0.0.4
+- Added auto-refresh functionality
+- Added log rotation support
+- Security improvements
+
+### 0.0.3
+- Added MCP Server for Claude Code integration
+- Added API key authentication
+- Added real-time log viewing
+
+### 0.0.2
+- Added search and filter functionality
+- Improved admin interface
+
+### 0.0.1
 - Initial release
+- Basic debug log viewer
 
 ## License
 

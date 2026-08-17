@@ -4,6 +4,48 @@ DLV-MCP - Debug Log Viewer and MCP Server
 Changelog / History
 -------------------
 
+v0.0.10
+-------
+- The log file list now follows the directory of the CONFIGURED log file
+  instead of this site's own upload directory. New helper get_log_dir()
+  returns dirname(settings['log_file']), falling back to
+  uploads/dlv-mcp-logs when nothing is configured yet.
+- Used by get_all_log_files() (and therefore every MCP tool), by the
+  admin log viewer (ajax_view_log) and by log deletion. Deliberately NOT
+  used by generate_log_file_path(): creating a new log file must stay
+  with this site's own upload directory.
+- Background (found 2026-08-17 on a live setup): the log path is stored
+  as an absolute path in the option dlv_mcp_settings, and
+  maybe_apply_logging() feeds it to ini_set('error_log', ...). A site
+  cloned including its database - here a WPvivid Staging copy - inherits
+  the original's path and writes into the original's file. The tools,
+  however, listed the local directory, which on the clone only holds the
+  copies that came with it. Result: get_log_info reported the correct
+  current file (name, size, modification time all matched the original),
+  while get_debug_log and get_errors_since served content that was seven
+  months old and reported "no errors" for a window in which the original
+  had plenty. Two sources of truth for one question, and the mismatch was
+  invisible from the outside.
+- Note this does not separate a clone from its original. As long as both
+  share one path, both keep writing into the same file - and clearing it
+  from either side empties it for both. To split them, switch logging off
+  and on again in the clone's admin: enable_logging() then creates a new
+  file named after the clone's own host.
+- New const VERSION replaces the literal '3.0.0' that sat in three places:
+  the serverInfo.version of the MCP initialize response and the cache
+  buster of admin.css and admin.js. The MCP schema defines Implementation
+  as "the name and version of an MCP implementation" - the implementation
+  here IS the plugin, there is no separately versioned product behind it.
+  What a client actually negotiates on is protocolVersion and tools/list,
+  not serverInfo.version.
+- The frozen asset version was the real bug in that trio: because the
+  number never changed, browsers that had cached admin.css or admin.js
+  kept serving the old files after an update. The version now moves with
+  every release.
+- Version 0.0.9 was skipped. The plugin header had already been bumped to
+  0.0.10 while readme.txt and this file still said 0.0.9, so 0.0.10 is the
+  first release carrying the get_log_dir() change.
+
 v0.0.8
 ------
 - MCP tools now transparently read across all rotated log files
