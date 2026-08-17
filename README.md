@@ -1,3 +1,5 @@
+![DLV-MCP - Debug Log Viewer and MCP Server for AI Coding](.wordpress-org/banner.jpg)
+
 # DLV-MCP - WordPress Debug Log Viewer and MCP Server
 
 ## Let your vibe coding AI talk to your debug log.
