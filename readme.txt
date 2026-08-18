@@ -1,4 +1,4 @@
-=== DLV-MCP - Debug Log Viewer with MCP Server ===
+=== DLV-MCP - Wordpress Debug Log Viewer with MCP Server ===
 Contributors: mistermusiker
 Author: Roger Kirchhoff
 Tags: debug, log, mcp, ai, debugging, claude, cursor, developer, error-log
