@@ -9,7 +9,7 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Debug Log Viewer with MCP Server for Claude Code and Cursor integration. View, filter, and manage WordPress debug logs with AI assistance.
+Wordpress Debug Log Viewer with MCP Server for Claude Code and Cursor integration. View, filter, and manage WordPress debug logs with AI assistance.
 
 == Description ==
 
