@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version from tag and check it against the files
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          HEADER=$(grep -m1 '^ \* Version:' dlv-mcp.php | awk '{print $3}')
+          CONST=$(grep -m1 '^const VERSION' dlv-mcp.php | sed "s/.*'\(.*\)'.*/\1/")
+          STABLE=$(grep -m1 '^Stable tag:' readme.txt | awk '{print $3}')
+          echo "tag=$VERSION header=$HEADER const=$CONST stable=$STABLE"
+          for found in "$HEADER" "$CONST" "$STABLE"; do
+            if [ "$found" != "$VERSION" ]; then
+              echo "::error::Tag says $VERSION but a file says $found"
+              exit 1
+            fi
+          done
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build the plugin ZIP
+        run: |
+          mkdir -p build/dlv-mcp
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.wordpress-org' \
+            --exclude='build' \
+            --exclude='.DS_Store' \
+            ./ build/dlv-mcp/
+          cd build
+          zip -rq "../dlv-mcp-${{ steps.version.outputs.version }}.zip" dlv-mcp
+          unzip -l "../dlv-mcp-${{ steps.version.outputs.version }}.zip"
+
+      - name: Create a draft release with the ZIP attached
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --draft \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            "dlv-mcp-${{ steps.version.outputs.version }}.zip"
