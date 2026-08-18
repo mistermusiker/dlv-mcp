@@ -1,4 +1,4 @@
-![DLV-MCP - Debug Log Viewer and MCP Server for AI Coding](.wordpress-org/banner.jpg)
+![DLV-MCP - Debug Log Viewer and MCP Server for AI Coding](assets/banner.jpg)
 
 # DLV-MCP - WordPress Debug Log Viewer and MCP Server
 
@@ -25,19 +25,12 @@ DLV-MCP makes WordPress debugging easier by providing:
 
 ## Installation
 
-DLV-MCP is not in the wordpress.org plugin directory, so install it from a release ZIP or by copying the files.
+DLV-MCP is not in the wordpress.org plugin directory, so install it manually.
 
-### From WordPress Admin (ZIP)
-
-1. Download the ZIP of the latest [release](https://github.com/mistermusiker/dlv-mcp/releases)
-2. In WordPress, go to **Plugins > Add New > Upload Plugin**
-3. Choose the ZIP, click **Install Now**, then **Activate**
-
-### Manual Installation (FTP/SFTP)
-
-1. Download and unpack the release ZIP
-2. Upload the `dlv-mcp` folder to `/wp-content/plugins/`
-3. Activate the plugin through the 'Plugins' menu in WordPress
+1. Download the repository: green **Code** button > **Download ZIP**
+2. Unpack it and rename the folder from `dlv-mcp-main` to `dlv-mcp`
+3. Upload the `dlv-mcp` folder to `/wp-content/plugins/`
+4. Activate the plugin through the 'Plugins' menu in WordPress
 
 ## Configuration
 
